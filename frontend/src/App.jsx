@@ -1,62 +1,35 @@
-import {
-  Route,
-  Routes,
-} from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 
 import Home from "./pages/Home";
+import AuthPage from "./pages/AuthPage";
 import Studio from "./pages/Studio";
+import ProjectEditor from "./pages/ProjectEditor";
 import SignalLab from "./pages/SignalLab";
-import AuthPage  from "./pages/AuthPage";
-
+import Profile from "./pages/Profile";
 
 const App = () => {
+  const location = useLocation();
+
+  const isProjectEditor =
+    location.pathname.startsWith("/studio/");
+
   return (
-    <div
-      className="
-        min-h-screen
-        bg-[var(--bg-main)]
-        text-[var(--text-main)]
-      "
-    >
-      <Navbar />
+    <div className="min-h-screen bg-[var(--bg-main)] text-white">
+      {!isProjectEditor && <Navbar />}
 
-      {/* Navbar is fixed, so give pages top spacing */}
-      <main className="pt-20">
+      <main className={isProjectEditor ? "" : "pt-24"}>
         <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/studio" element={<Studio />} />
           <Route
-            path="/"
-            element={<Home />}
+            path="/studio/:projectId"
+            element={<ProjectEditor />}
           />
-
-          <Route
-            path="/studio"
-            element={<Studio />}
-          />
-
-          <Route
-            path="/signal-lab"
-            element={<SignalLab />}
-          />
-        <Route
-            path="/auth"
-            element={<AuthPage />}
-          />
-          
-
-
-          {/* 404 */}
-          <Route
-            path="*"
-            element={
-              <div className="flex min-h-[70vh] items-center justify-center">
-                <h1 className="text-3xl font-bold">
-                  Page not found
-                </h1>
-              </div>
-            }
-          />
+          <Route path="/signal-lab" element={<SignalLab />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
     </div>

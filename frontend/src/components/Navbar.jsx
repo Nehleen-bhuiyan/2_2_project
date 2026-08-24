@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { User, LogOut } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/audiverse_logo.png";
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -86,16 +87,23 @@ const Navbar = () => {
                 <Link
                     to="/"
                     className="
-            shrink-0
-            text-2xl
-            font-bold
-            tracking-wide
-            text-[var(--accent)]
-            transition
-            hover:text-[var(--accent-hover)]
-          "
+    shrink-0
+    flex
+    items-center
+  "
                 >
-                    AudiVerse
+                    <img
+                        src={logo}
+                        alt="AudiVerse"
+                        className="
+      h-9
+      w-auto
+      object-contain
+      transition
+      duration-200
+      hover:scale-105
+    "
+                    />
                 </Link>
 
                 {/* =========================
