@@ -1,0 +1,22 @@
+@import "tailwindcss";
+:root {
+  background-color: #09090B;
+  --bg-panel: #0b1513;
+
+  --accent: #19d3c5;
+  --accent-hover: #22e7d8;
+  --accent-soft: rgba(25, 211, 197, 0.15);
+
+  --text-main: #ffffff;
+  --text-muted: #9ca3af;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+
+  font-family: "Montserrat", sans-serif;
+
+  background: var(--bg-main);
+  color: white;
+}
