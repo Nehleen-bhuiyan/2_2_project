@@ -13,6 +13,9 @@ from routes.export_route import (router as export_router,
 )
 from routes.preview_route import (router as preview_router,
 )
+from routes.effect_route import (
+    router as effect_router,
+)
 from config.db import engine
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -79,6 +82,10 @@ app.include_router(
 )
 app.include_router(
     export_router,
+    prefix="/api",
+)
+app.include_router(
+    effect_router,
     prefix="/api",
 )
 #uvicorn main:app --reload

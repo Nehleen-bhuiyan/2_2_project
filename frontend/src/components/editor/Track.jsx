@@ -1,16 +1,28 @@
 import { Trash2 } from "lucide-react";
+
 import Clip from "./Clip";
 import TrackMarker from "./TrackMarker";
+
 
 const Track = ({
   track,
   project,
   updateProjectState,
+
   editMarkerTime,
   setEditMarkerTime,
+
+  selectedClip,
+  setSelectedClip,
 }) => {
-  //handle split
-  const handleSplitClip = async (splitTime) => {
+
+  // ==========================================
+  // SPLIT CLIP AT TRACK MARKER
+  // ==========================================
+
+  const handleSplitClip = async (
+    splitTime
+  ) => {
     if (!project) {
       return;
     }
@@ -19,6 +31,7 @@ const Track = ({
       project.state.tracks.map(
         (currentTrack) => {
 
+          // Only operate on this track
           if (
             currentTrack.id !==
             track.id
@@ -26,7 +39,9 @@ const Track = ({
             return currentTrack;
           }
 
+
           const updatedClips = [];
+
 
           currentTrack.clips.forEach(
             (clip) => {
@@ -39,7 +54,7 @@ const Track = ({
                 clip.timelineStart;
 
               const clipEnd =
-                clip.timelineStart +
+                clipStart +
                 clipDuration;
 
 
@@ -48,13 +63,16 @@ const Track = ({
                 splitTime <= clipStart ||
                 splitTime >= clipEnd
               ) {
-                updatedClips.push(clip);
+                updatedClips.push(
+                  clip
+                );
+
                 return;
               }
 
 
               // ==================================
-              // FIND WHERE TO SPLIT SOURCE AUDIO
+              // FIND SOURCE SPLIT POSITION
               // ==================================
 
               const offsetInsideClip =
@@ -113,13 +131,38 @@ const Track = ({
                 leftClip,
                 rightClip
               );
+
+
+              /*
+                If the original clip was selected,
+                select the left half after splitting.
+
+                You could choose rightClip instead
+                if you prefer.
+              */
+              if (
+                selectedClip?.trackId ===
+                  track.id &&
+                selectedClip?.clipId ===
+                  clip.id
+              ) {
+                setSelectedClip({
+                  trackId:
+                    track.id,
+
+                  clipId:
+                    leftClip.id,
+                });
+              }
             }
           );
 
 
           return {
             ...currentTrack,
-            clips: updatedClips,
+
+            clips:
+              updatedClips,
           };
         }
       );
@@ -127,7 +170,9 @@ const Track = ({
 
     const newState = {
       ...project.state,
-      tracks: updatedTracks,
+
+      tracks:
+        updatedTracks,
     };
 
 
@@ -135,6 +180,7 @@ const Track = ({
       newState
     );
   };
+
 
   // ==========================================
   // DELETE WHOLE TRACK
@@ -145,18 +191,41 @@ const Track = ({
       return;
     }
 
+
     const updatedTracks =
       project.state.tracks.filter(
         (currentTrack) =>
-          currentTrack.id !== track.id
+          currentTrack.id !==
+          track.id
       );
+
+
+    /*
+      If selected clip belongs to this track,
+      clear selection.
+    */
+
+    if (
+      selectedClip?.trackId ===
+      track.id
+    ) {
+      setSelectedClip(
+        null
+      );
+    }
+
 
     const newState = {
       ...project.state,
-      tracks: updatedTracks,
+
+      tracks:
+        updatedTracks,
     };
 
-    await updateProjectState(newState);
+
+    await updateProjectState(
+      newState
+    );
   };
 
 
@@ -171,38 +240,74 @@ const Track = ({
       return;
     }
 
+
     const updatedTracks =
       project.state.tracks
-        .map((currentTrack) => {
-          if (
-            currentTrack.id !==
-            track.id
-          ) {
-            return currentTrack;
+        .map(
+          (currentTrack) => {
+
+            if (
+              currentTrack.id !==
+              track.id
+            ) {
+              return currentTrack;
+            }
+
+
+            const updatedClips =
+              currentTrack.clips.filter(
+                (clip) =>
+                  clip.id !==
+                  clipId
+              );
+
+
+            return {
+              ...currentTrack,
+
+              clips:
+                updatedClips,
+            };
           }
+        )
 
-          const updatedClips =
-            currentTrack.clips.filter(
-              (clip) =>
-                clip.id !== clipId
-            );
-
-          return {
-            ...currentTrack,
-            clips: updatedClips,
-          };
-        })
+        // Remove track automatically
+        // if it becomes empty
         .filter(
           (currentTrack) =>
-            currentTrack.clips.length > 0
+            currentTrack.clips.length >
+            0
         );
+
+
+    /*
+      Clear selection if deleted
+      clip was selected.
+    */
+
+    if (
+      selectedClip?.trackId ===
+        track.id &&
+      selectedClip?.clipId ===
+        clipId
+    ) {
+      setSelectedClip(
+        null
+      );
+    }
+
 
     const newState = {
       ...project.state,
-      tracks: updatedTracks,
+
+      tracks:
+        updatedTracks,
     };
 
-    await updateProjectState(newState);
+
+    await updateProjectState(
+      newState
+    );
   };
 
 
@@ -218,6 +323,7 @@ const Track = ({
       return;
     }
 
+
     const updatedTracks =
       project.state.tracks.map(
         (currentTrack) => {
@@ -229,15 +335,18 @@ const Track = ({
             return currentTrack;
           }
 
+
           const updatedClips =
             currentTrack.clips.map(
               (clip) => {
 
                 if (
-                  clip.id !== clipId
+                  clip.id !==
+                  clipId
                 ) {
                   return clip;
                 }
+
 
                 return {
                   ...clip,
@@ -248,17 +357,24 @@ const Track = ({
               }
             );
 
+
           return {
             ...currentTrack,
-            clips: updatedClips,
+
+            clips:
+              updatedClips,
           };
         }
       );
 
+
     const newState = {
       ...project.state,
-      tracks: updatedTracks,
+
+      tracks:
+        updatedTracks,
     };
+
 
     await updateProjectState(
       newState
@@ -284,13 +400,16 @@ const Track = ({
       "
     >
 
-      {/* TRACK DELETE BUTTON */}
+      {/* ======================================
+          TRACK DELETE BUTTON
+      ====================================== */}
 
       <div
         className="
           flex
           w-12
           shrink-0
+
           items-center
           justify-center
 
@@ -299,6 +418,8 @@ const Track = ({
         "
       >
         <button
+          type="button"
+
           onClick={
             handleDeleteTrack
           }
@@ -307,7 +428,9 @@ const Track = ({
             flex
             h-8
             w-8
+
             cursor-pointer
+
             items-center
             justify-center
 
@@ -323,12 +446,16 @@ const Track = ({
 
           title="Delete track"
         >
-          <Trash2 size={16} />
+          <Trash2
+            size={16}
+          />
         </button>
       </div>
 
 
-      {/* TRACK CONTENT */}
+      {/* ======================================
+          TRACK CONTENT
+      ====================================== */}
 
       <div
         className="
@@ -337,18 +464,57 @@ const Track = ({
         "
       >
 
+        {/* CLIPS */}
+
         {track.clips?.map(
           (clip) => (
-            <Clip
-              key={clip.id}
 
-              clip={clip}
+            <Clip
+              key={
+                clip.id
+              }
+
+              clip={
+                clip
+              }
+
+
+              // ==============================
+              // SELECTION
+              // ==============================
+
+              selected={
+                selectedClip?.trackId ===
+                  track.id &&
+                selectedClip?.clipId ===
+                  clip.id
+              }
+
+              onSelect={() => {
+                setSelectedClip({
+                  trackId:
+                    track.id,
+
+                  clipId:
+                    clip.id,
+                });
+              }}
+
+
+              // ==============================
+              // DELETE
+              // ==============================
 
               onDelete={() =>
                 handleDeleteClip(
                   clip.id
                 )
               }
+
+
+              // ==============================
+              // DRAG
+              // ==============================
 
               onMove={(newTime) =>
                 handleMoveClip(
@@ -357,17 +523,31 @@ const Track = ({
                 )
               }
             />
+
           )
         )}
 
 
-        {/* PER-TRACK EDIT MARKER */}
+        {/* ====================================
+            PER-TRACK EDIT MARKER
+        ==================================== */}
 
         <TrackMarker
-          markerTime={editMarkerTime}
-          setMarkerTime={setEditMarkerTime}
-          track={track}
-          onSplit={handleSplitClip}
+          markerTime={
+            editMarkerTime
+          }
+
+          setMarkerTime={
+            setEditMarkerTime
+          }
+
+          track={
+            track
+          }
+
+          onSplit={
+            handleSplitClip
+          }
         />
 
       </div>
@@ -375,5 +555,6 @@ const Track = ({
     </div>
   );
 };
+
 
 export default Track;

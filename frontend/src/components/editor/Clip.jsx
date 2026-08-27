@@ -17,6 +17,8 @@ import {
 
 const Clip = ({
   clip,
+  selected,
+  onSelect,
   onDelete,
   onMove,
 }) => {
@@ -55,6 +57,25 @@ const Clip = ({
 
 
   // ==========================================
+  // KEEP DRAG TIME IN SYNC
+  // ==========================================
+
+  useEffect(() => {
+    if (!dragging) {
+      setDragTime(
+        clip.timelineStart
+      );
+
+      dragTimeRef.current =
+        clip.timelineStart;
+    }
+  }, [
+    clip.timelineStart,
+    dragging,
+  ]);
+
+
+  // ==========================================
   // CLIP SIZE
   // ==========================================
 
@@ -68,7 +89,7 @@ const Clip = ({
 
 
   // ==========================================
-  // POSITION TO SHOW
+  // DISPLAY POSITION
   // ==========================================
 
   const displayedTime =
@@ -83,53 +104,71 @@ const Clip = ({
 
 
   // ==========================================
-  // START CLIP DRAG
+  // START CLIP DRAG + SELECT
   // ==========================================
 
   const handlePointerDown = (
     event
   ) => {
-    if (
-      event.button !== 0
-    ) {
+    // only left click
+    if (event.button !== 0) {
       return;
     }
+
+
+    // ========================================
+    // SELECT THIS CLIP
+    // ========================================
+
+    onSelect?.();
+
 
     /*
-      If context menu is open,
-      don't start dragging.
+      If context menu is currently open,
+      close it first and don't start dragging.
     */
+
     if (showMenu) {
+      setShowMenu(false);
       return;
     }
 
+
     event.preventDefault();
+
 
     dragStartXRef.current =
       event.clientX;
 
+
     originalTimeRef.current =
       clip.timelineStart;
 
+
     dragTimeRef.current =
       clip.timelineStart;
+
 
     setDragTime(
       clip.timelineStart
     );
 
-    setDragging(true);
+
+    setDragging(
+      true
+    );
   };
 
 
   // ==========================================
-  // HANDLE DRAG MOVEMENT
+  // DRAG MOVEMENT
   // ==========================================
 
   useEffect(() => {
     if (!dragging) {
       return;
     }
+
 
     const handlePointerMove = (
       event
@@ -138,12 +177,15 @@ const Clip = ({
         event.clientX -
         dragStartXRef.current;
 
+
       const deltaTime =
         deltaX /
         PIXELS_PER_SECOND;
 
+
       /*
-        Prevent moving before 0 sec.
+        Do not allow clips
+        before project time 0.
       */
 
       const newTime =
@@ -153,8 +195,10 @@ const Clip = ({
             deltaTime
         );
 
+
       dragTimeRef.current =
         newTime;
+
 
       setDragTime(
         newTime
@@ -163,15 +207,29 @@ const Clip = ({
 
 
     const handlePointerUp = () => {
-      setDragging(false);
+      setDragging(
+        false
+      );
+
 
       /*
-        Save once when drag finishes.
+        Only persist if position
+        actually changed.
       */
 
-      if (onMove) {
-        onMove(
-          dragTimeRef.current
+      const finalTime =
+        dragTimeRef.current;
+
+
+      if (
+        Math.abs(
+          finalTime -
+            originalTimeRef.current
+        ) >
+        0.001
+      ) {
+        onMove?.(
+          finalTime
         );
       }
     };
@@ -181,6 +239,7 @@ const Clip = ({
       "pointermove",
       handlePointerMove
     );
+
 
     window.addEventListener(
       "pointerup",
@@ -193,6 +252,7 @@ const Clip = ({
         "pointermove",
         handlePointerMove
       );
+
 
       window.removeEventListener(
         "pointerup",
@@ -214,15 +274,25 @@ const Clip = ({
     event
   ) => {
     event.preventDefault();
-
-    /*
-      Stop right-click from
-      beginning a drag.
-    */
-
     event.stopPropagation();
 
-    setShowMenu(true);
+
+    /*
+      Right-click also selects
+      the clip.
+    */
+
+    onSelect?.();
+
+
+    setDragging(
+      false
+    );
+
+
+    setShowMenu(
+      true
+    );
   };
 
 
@@ -240,14 +310,18 @@ const Clip = ({
           event.target
         )
       ) {
-        setShowMenu(false);
+        setShowMenu(
+          false
+        );
       }
     };
+
 
     document.addEventListener(
       "mousedown",
       handleOutsideClick
     );
+
 
     return () => {
       document.removeEventListener(
@@ -263,7 +337,9 @@ const Clip = ({
   // ==========================================
 
   const handleDelete = () => {
-    setShowMenu(false);
+    setShowMenu(
+      false
+    );
 
     onDelete?.();
   };
@@ -291,9 +367,6 @@ const Clip = ({
 
         rounded-xl
 
-        border
-        border-[var(--accent)]/70
-
         bg-[var(--accent)]
 
         text-black
@@ -301,6 +374,26 @@ const Clip = ({
         overflow-visible
 
         select-none
+
+        transition-all
+        duration-150
+
+        ${
+          selected
+            ? `
+                ring-2
+                ring-white
+
+                ring-offset-2
+                ring-offset-[#080c0b]
+
+                shadow-[0_0_18px_rgba(255,255,255,0.28)]
+              `
+            : `
+                border
+                border-[var(--accent)]/70
+              `
+        }
 
         ${
           dragging
@@ -315,7 +408,9 @@ const Clip = ({
       }}
     >
 
-      {/* WAVEFORM */}
+      {/* ======================================
+          WAVEFORM
+      ====================================== */}
 
       <div
         className="
@@ -346,7 +441,6 @@ const Clip = ({
           ),
         }).map(
           (_, index) => {
-
             const height =
               20 +
               (
@@ -354,9 +448,12 @@ const Clip = ({
                 45
               );
 
+
             return (
               <div
-                key={index}
+                key={
+                  index
+                }
 
                 className="
                   w-[2px]
@@ -378,7 +475,9 @@ const Clip = ({
       </div>
 
 
-      {/* CLIP NAME */}
+      {/* ======================================
+          CLIP NAME
+      ====================================== */}
 
       <div
         className="
@@ -398,8 +497,12 @@ const Clip = ({
       >
         <Music2
           size={14}
-          className="shrink-0"
+
+          className="
+            shrink-0
+          "
         />
+
 
         <span
           className="
@@ -415,7 +518,35 @@ const Clip = ({
       </div>
 
 
-      {/* DRAG TIME LABEL */}
+      {/* ======================================
+          SELECTED INDICATOR
+      ====================================== */}
+
+      {selected && (
+        <div
+          className="
+            pointer-events-none
+
+            absolute
+            right-2
+            top-2
+
+            h-2
+            w-2
+
+            rounded-full
+
+            bg-white
+
+            shadow-[0_0_8px_rgba(255,255,255,0.8)]
+          "
+        />
+      )}
+
+
+      {/* ======================================
+          DRAG TIME LABEL
+      ====================================== */}
 
       {dragging && (
         <div
@@ -443,23 +574,30 @@ const Clip = ({
             shadow-lg
           "
         >
-          {dragTime.toFixed(2)}s
+          {dragTime.toFixed(
+            2
+          )}
+          s
         </div>
       )}
 
 
-      {/* RIGHT CLICK MENU */}
+      {/* ======================================
+          RIGHT CLICK MENU
+      ====================================== */}
 
       {showMenu && (
         <div
-          ref={menuRef}
+          ref={
+            menuRef
+          }
 
           onPointerDown={(
             event
           ) => {
             /*
-              Prevent clicking menu
-              from starting clip drag.
+              Don't let clicks inside
+              the menu start dragging.
             */
 
             event.stopPropagation();
@@ -497,7 +635,9 @@ const Clip = ({
             className="
               flex
               w-full
+
               cursor-pointer
+
               items-center
               gap-2
 
@@ -520,6 +660,7 @@ const Clip = ({
 
             Delete
           </button>
+
         </div>
       )}
 

@@ -22,7 +22,7 @@ const App = () => {
       <main className={isProjectEditor ? "" : "pt-24"}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<AuthPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/studio" element={<Studio />} />
           <Route
             path="/studio/:projectId"
