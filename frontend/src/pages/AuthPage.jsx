@@ -242,7 +242,7 @@ const AuthPage = () => {
               "
             >
               {isLogin
-                ? "New to SignalStudio? Create an account and start editing."
+                ? "New to Audiverse? Create an account and start editing."
                 : "Already have an account? Sign in to continue your projects."}
             </p>
 
@@ -327,7 +327,7 @@ const AuthPage = () => {
                     text-gray-400
                   "
                 >
-                  Welcome back to SignalStudio
+                  Welcome back to Audiverse
                 </p>
               </div>
 

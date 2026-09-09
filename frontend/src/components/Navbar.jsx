@@ -27,6 +27,15 @@ const Navbar = () => {
             name: "Signal Lab",
             to: "/signal-lab",
         },
+        {
+            name: "Spill Your Guts",
+            to: "/spill-your-guts",
+        },
+        {
+            name: "Voice Changer",
+            to: "/voice-changer",
+        }
+
     ];
 
     // Close profile dropdown when clicking outside

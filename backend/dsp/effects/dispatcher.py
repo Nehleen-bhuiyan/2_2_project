@@ -1,7 +1,7 @@
 from .gain import apply_gain
 from .normalize import apply_normalize
 from .reverse import apply_reverse
-
+from .distortion import apply_distortion
 from .fade import (
     apply_fade_in,
     apply_fade_out,
@@ -160,7 +160,25 @@ def apply_effect(
             ),
         )
 
+    # ========================================================
+    # DISTORTION
+    # ========================================================
 
+    if effect_type == "distortion":
+        return apply_distortion(
+            samples,
+
+            amount=(
+                value
+                if value is not None
+                else 0.5
+            ),
+
+            drive=params.get(
+                "drive",
+                4.0,
+            ),
+        )
     # ========================================================
     # HIGH PASS
     # ========================================================

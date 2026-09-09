@@ -3,12 +3,10 @@ import {
   useRef,
   useState,
 } from "react";
+
 import {
   Undo2,
   Redo2,
-  // other icons...
-} from "lucide-react";
-import {
   Gauge,
   FastForward,
   Waves,
@@ -25,7 +23,10 @@ import {
   ChevronsUp,
   BarChart3,
   Zap,
+  Mic,
 } from "lucide-react";
+
+import VoiceRecorderModal from "./VoiceRecorderModal";
 
 
 const EditingRibbon = ({
@@ -38,21 +39,38 @@ const EditingRibbon = ({
   canUndo,
   canRedo,
 }) => {
+
   const [
     activeControl,
     setActiveControl,
-  ] = useState(null);
+  ] = useState(
+    null
+  );
+
+
+  const [
+    tooltip,
+    setTooltip,
+  ] = useState(
+    null
+  );
+
+
+  const [
+    showRecorder,
+    setShowRecorder,
+  ] = useState(
+    false
+  );
+
 
   const popoverRef =
     useRef(null);
 
-const [
-  tooltip,
-  setTooltip,
-] = useState(null);
-  // ==========================================
-  // DEFAULT EFFECT PARAMETERS
-  // ==========================================
+
+  // =========================================================
+  // DEFAULT PARAMETERS
+  // =========================================================
 
   const [
     parameters,
@@ -103,9 +121,9 @@ const [
   });
 
 
-  // ==========================================
+  // =========================================================
   // EFFECT DEFINITIONS
-  // ==========================================
+  // =========================================================
 
   const effects = [
     {
@@ -229,28 +247,35 @@ const [
   ];
 
 
-  // ==========================================
-  // CLOSE POPOVER
-  // ==========================================
+  // =========================================================
+  // CLOSE EFFECT POPOVER ON OUTSIDE CLICK
+  // =========================================================
 
   useEffect(() => {
-    const handleOutsideClick = (
-      event
-    ) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(
-          event.target
-        )
-      ) {
-        setActiveControl(null);
-      }
-    };
+
+    const handleOutsideClick =
+      (event) => {
+
+        if (
+          activeControl &&
+          popoverRef.current &&
+          !popoverRef.current
+            .contains(
+              event.target
+            )
+        ) {
+          setActiveControl(
+            null
+          );
+        }
+      };
+
 
     document.addEventListener(
       "mousedown",
       handleOutsideClick
     );
+
 
     return () => {
       document.removeEventListener(
@@ -258,52 +283,65 @@ const [
         handleOutsideClick
       );
     };
-  }, []);
+
+  }, [
+    activeControl,
+  ]);
 
 
-  // ==========================================
-  // GET CURRENT EFFECT PARAMETERS
-  // ==========================================
+  // =========================================================
+  // BUILD EFFECT PARAMETERS
+  // =========================================================
 
-  const buildEffectParameters = (
-    effectId
-  ) => {
-    const value =
-      parameters[effectId];
+  const buildEffectParameters =
+    (
+      effectId
+    ) => {
+
+      const value =
+        parameters[
+          effectId
+        ];
 
 
-    if (
-      effectId === "reverb" ||
-      effectId === "echo" ||
-      effectId === "equalizer"
-    ) {
+      if (
+        effectId ===
+          "reverb" ||
+        effectId ===
+          "echo" ||
+        effectId ===
+          "equalizer"
+      ) {
+        return {
+          ...value,
+        };
+      }
+
+
+      if (
+        effectId ===
+          "reverse" ||
+        effectId ===
+          "normalize"
+      ) {
+        return {};
+      }
+
+
       return {
-        ...value,
+        value,
       };
-    }
-
-
-    if (
-      effectId === "reverse" ||
-      effectId === "normalize"
-    ) {
-      return {};
-    }
-
-
-    return {
-      value,
     };
-  };
 
 
-  // ==========================================
+  // =========================================================
   // APPLY EFFECT
-  // ==========================================
+  // =========================================================
 
   const applyEffect = (
     effectId
   ) => {
+
     if (!selectedClip) {
       alert(
         "Select a clip first."
@@ -311,6 +349,7 @@ const [
 
       return;
     }
+
 
     onEffectSelect?.({
       type:
@@ -322,43 +361,46 @@ const [
         ),
     });
 
-    setActiveControl(null);
+
+    setActiveControl(
+      null
+    );
   };
 
 
-  // ==========================================
-  // NORMAL CLICK
-  // ==========================================
+  // =========================================================
+  // NORMAL EFFECT CLICK
+  // =========================================================
 
   const handleEffectClick = (
     effect
   ) => {
-    /*
-      Normal click immediately applies
-      the default/current values.
-    */
-
     applyEffect(
       effect.id
     );
   };
 
 
-  // ==========================================
-  // RIGHT CLICK
-  // ==========================================
+  // =========================================================
+  // RIGHT CLICK FOR SETTINGS
+  // =========================================================
 
   const handleContextMenu = (
     event,
     effect
   ) => {
+
     event.preventDefault();
+
+    event.stopPropagation();
+
 
     if (
       !effect.hasControl
     ) {
       return;
     }
+
 
     if (!selectedClip) {
       alert(
@@ -368,20 +410,29 @@ const [
       return;
     }
 
+
+    setTooltip(
+      null
+    );
+
+
     setActiveControl(
       effect.id
     );
   };
 
 
-  // ==========================================
-  // SINGLE SLIDER CONFIG
-  // ==========================================
+  // =========================================================
+  // SIMPLE SLIDER CONFIG
+  // =========================================================
 
   const getSliderConfig = (
     effectId
   ) => {
-    switch (effectId) {
+
+    switch (
+      effectId
+    ) {
 
       case "slow":
         return {
@@ -392,8 +443,12 @@ const [
           max: 1,
           step: 0.05,
 
-          display: (value) =>
-            `${value.toFixed(2)}x`,
+          display: (
+            value
+          ) =>
+            `${value.toFixed(
+              2
+            )}x`,
         };
 
 
@@ -406,8 +461,12 @@ const [
           max: 2,
           step: 0.05,
 
-          display: (value) =>
-            `${value.toFixed(2)}x`,
+          display: (
+            value
+          ) =>
+            `${value.toFixed(
+              2
+            )}x`,
         };
 
 
@@ -420,7 +479,9 @@ const [
           max: 1,
           step: 0.05,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${Math.round(
               value * 100
             )}%`,
@@ -436,7 +497,9 @@ const [
           max: 12000,
           step: 100,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${value} Hz`,
         };
 
@@ -450,7 +513,9 @@ const [
           max: 3000,
           step: 20,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${value} Hz`,
         };
 
@@ -464,7 +529,9 @@ const [
           max: 2,
           step: 0.05,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${Math.round(
               value * 100
             )}%`,
@@ -480,7 +547,9 @@ const [
           max: 2,
           step: 0.05,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${Math.round(
               value * 100
             )}%`,
@@ -496,7 +565,9 @@ const [
           max: 12,
           step: 1,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${
               value > 0
                 ? "+"
@@ -515,8 +586,12 @@ const [
           max: 5,
           step: 0.1,
 
-          display: (value) =>
-            `${value.toFixed(1)}s`,
+          display: (
+            value
+          ) =>
+            `${value.toFixed(
+              1
+            )}s`,
         };
 
 
@@ -529,8 +604,12 @@ const [
           max: 2,
           step: 0.05,
 
-          display: (value) =>
-            `${value.toFixed(2)}x`,
+          display: (
+            value
+          ) =>
+            `${value.toFixed(
+              2
+            )}x`,
         };
 
 
@@ -543,7 +622,9 @@ const [
           max: 1,
           step: 0.05,
 
-          display: (value) =>
+          display: (
+            value
+          ) =>
             `${Math.round(
               value * 100
             )}%`,
@@ -556,54 +637,62 @@ const [
   };
 
 
-  // ==========================================
+  // =========================================================
   // CHANGE SIMPLE PARAMETER
-  // ==========================================
+  // =========================================================
 
-  const changeSimpleParameter = (
-    effectId,
-    value
-  ) => {
-    setParameters(
-      (previous) => ({
-        ...previous,
+  const changeSimpleParameter =
+    (
+      effectId,
+      value
+    ) => {
 
-        [effectId]:
-          Number(value),
-      })
-    );
-  };
+      setParameters(
+        (previous) => ({
+          ...previous,
+
+          [effectId]:
+            Number(
+              value
+            ),
+        })
+      );
+    };
 
 
-  // ==========================================
+  // =========================================================
   // CHANGE OBJECT PARAMETER
-  // ==========================================
+  // =========================================================
 
-  const changeObjectParameter = (
-    effectId,
-    key,
-    value
-  ) => {
-    setParameters(
-      (previous) => ({
-        ...previous,
+  const changeObjectParameter =
+    (
+      effectId,
+      key,
+      value
+    ) => {
 
-        [effectId]: {
-          ...previous[
-            effectId
-          ],
+      setParameters(
+        (previous) => ({
+          ...previous,
 
-          [key]:
-            Number(value),
-        },
-      })
-    );
-  };
+          [effectId]: {
+            ...previous[
+              effectId
+            ],
+
+            [key]:
+              Number(
+                value
+              ),
+          },
+        })
+      );
+    };
 
 
-  // ==========================================
+  // =========================================================
   // REUSABLE SLIDER
-  // ==========================================
+  // =========================================================
 
   const SliderRow = ({
     label,
@@ -614,11 +703,17 @@ const [
     display,
     onChange,
   }) => {
+
     return (
-      <div className="mb-4">
+      <div
+        className="
+          mb-5
+        "
+      >
         <div
           className="
             mb-2
+
             flex
             items-center
             justify-between
@@ -633,14 +728,18 @@ const [
             {label}
           </span>
 
+
           <span
             className="
               text-xs
               font-semibold
+
               text-[var(--accent)]
             "
           >
-            {display(value)}
+            {display(
+              value
+            )}
           </span>
         </div>
 
@@ -648,23 +747,36 @@ const [
         <input
           type="range"
 
-          min={min}
-          max={max}
-          step={step}
+          min={
+            min
+          }
 
-          value={value}
+          max={
+            max
+          }
+
+          step={
+            step
+          }
+
+          value={
+            value
+          }
 
           onChange={(
             event
-          ) =>
+          ) => {
             onChange(
-              event.target.value
-            )
-          }
+              event.target
+                .value
+            );
+          }}
 
           className="
             w-full
+
             cursor-pointer
+
             accent-[var(--accent)]
           "
         />
@@ -673,77 +785,108 @@ const [
   };
 
 
-  // ==========================================
-  // SPECIAL REVERB CONTROLS
-  // ==========================================
+  // =========================================================
+  // REVERB CONTROLS
+  // =========================================================
 
   const renderReverbControls =
     () => {
+
       const value =
         parameters.reverb;
+
 
       return (
         <>
           <SliderRow
             label="Wet Level"
-            value={value.value}
+
+            value={
+              value.value
+            }
+
             min={0}
             max={1}
             step={0.05}
 
-            display={(v) =>
+            display={(
+              current
+            ) =>
               `${Math.round(
-                v * 100
+                current *
+                  100
               )}%`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "reverb",
                 "value",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Decay"
-            value={value.decay}
+
+            value={
+              value.decay
+            }
+
             min={0.1}
             max={2}
             step={0.05}
 
-            display={(v) =>
-              `${v.toFixed(2)}s`
+            display={(
+              current
+            ) =>
+              `${current.toFixed(
+                2
+              )}s`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "reverb",
                 "decay",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Tail Duration"
+
             value={
               value.duration
             }
+
             min={0.2}
             max={5}
             step={0.1}
 
-            display={(v) =>
-              `${v.toFixed(1)}s`
+            display={(
+              current
+            ) =>
+              `${current.toFixed(
+                1
+              )}s`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "reverb",
                 "duration",
-                v
+                current
               )
             }
           />
@@ -752,99 +895,138 @@ const [
     };
 
 
-  // ==========================================
-  // SPECIAL ECHO CONTROLS
-  // ==========================================
+  // =========================================================
+  // ECHO CONTROLS
+  // =========================================================
 
   const renderEchoControls =
     () => {
+
       const value =
         parameters.echo;
+
 
       return (
         <>
           <SliderRow
             label="Wet Level"
-            value={value.value}
+
+            value={
+              value.value
+            }
+
             min={0}
             max={1}
             step={0.05}
 
-            display={(v) =>
+            display={(
+              current
+            ) =>
               `${Math.round(
-                v * 100
+                current *
+                  100
               )}%`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "echo",
                 "value",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Delay"
-            value={value.delay}
+
+            value={
+              value.delay
+            }
+
             min={0.05}
             max={1}
             step={0.05}
 
-            display={(v) =>
-              `${v.toFixed(2)}s`
+            display={(
+              current
+            ) =>
+              `${current.toFixed(
+                2
+              )}s`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "echo",
                 "delay",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Feedback"
+
             value={
               value.feedback
             }
+
             min={0}
             max={0.9}
             step={0.05}
 
-            display={(v) =>
+            display={(
+              current
+            ) =>
               `${Math.round(
-                v * 100
+                current *
+                  100
               )}%`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "echo",
                 "feedback",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Repeats"
-            value={value.repeats}
+
+            value={
+              value.repeats
+            }
+
             min={1}
             max={8}
             step={1}
 
-            display={(v) =>
-              `${v}`
+            display={(
+              current
+            ) =>
+              `${current}`
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "echo",
                 "repeats",
-                v
+                current
               )
             }
           />
@@ -853,87 +1035,106 @@ const [
     };
 
 
-  // ==========================================
+  // =========================================================
   // EQUALIZER CONTROLS
-  // ==========================================
+  // =========================================================
 
   const renderEqualizerControls =
     () => {
+
       const value =
         parameters.equalizer;
+
+
+      const formatDb = (
+        current
+      ) =>
+        `${
+          current >
+          0
+            ? "+"
+            : ""
+        }${current} dB`;
+
 
       return (
         <>
           <SliderRow
             label="Bass"
-            value={value.bass}
+
+            value={
+              value.bass
+            }
+
             min={-12}
             max={12}
             step={1}
 
-            display={(v) =>
-              `${
-                v > 0
-                  ? "+"
-                  : ""
-              }${v} dB`
+            display={
+              formatDb
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "equalizer",
                 "bass",
-                v
+                current
               )
             }
           />
+
 
           <SliderRow
             label="Mid"
-            value={value.mid}
+
+            value={
+              value.mid
+            }
+
             min={-12}
             max={12}
             step={1}
 
-            display={(v) =>
-              `${
-                v > 0
-                  ? "+"
-                  : ""
-              }${v} dB`
+            display={
+              formatDb
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "equalizer",
                 "mid",
-                v
+                current
               )
             }
           />
 
+
           <SliderRow
             label="Treble"
+
             value={
               value.treble
             }
+
             min={-12}
             max={12}
             step={1}
 
-            display={(v) =>
-              `${
-                v > 0
-                  ? "+"
-                  : ""
-              }${v} dB`
+            display={
+              formatDb
             }
 
-            onChange={(v) =>
+            onChange={(
+              current
+            ) =>
               changeObjectParameter(
                 "equalizer",
                 "treble",
-                v
+                current
               )
             }
           />
@@ -942,31 +1143,40 @@ const [
     };
 
 
-  // ==========================================
-  // RENDER CONTROL CONTENT
-  // ==========================================
+  // =========================================================
+  // RENDER EFFECT CONTROL
+  // =========================================================
 
   const renderControlContent =
     () => {
+
       if (
         activeControl ===
         "reverb"
       ) {
-        return renderReverbControls();
+        return (
+          renderReverbControls()
+        );
       }
+
 
       if (
         activeControl ===
         "echo"
       ) {
-        return renderEchoControls();
+        return (
+          renderEchoControls()
+        );
       }
+
 
       if (
         activeControl ===
         "equalizer"
       ) {
-        return renderEqualizerControls();
+        return (
+          renderEqualizerControls()
+        );
       }
 
 
@@ -974,6 +1184,7 @@ const [
         getSliderConfig(
           activeControl
         );
+
 
       if (!config) {
         return null;
@@ -988,22 +1199,36 @@ const [
 
       return (
         <SliderRow
-          label={config.label}
+          label={
+            config.label
+          }
 
-          value={value}
+          value={
+            value
+          }
 
-          min={config.min}
-          max={config.max}
-          step={config.step}
+          min={
+            config.min
+          }
+
+          max={
+            config.max
+          }
+
+          step={
+            config.step
+          }
 
           display={
             config.display
           }
 
-          onChange={(v) =>
+          onChange={(
+            current
+          ) =>
             changeSimpleParameter(
               activeControl,
-              v
+              current
             )
           }
         />
@@ -1011,440 +1236,593 @@ const [
     };
 
 
-  // ==========================================
+  // =========================================================
   // UI
-  // ==========================================
+  // =========================================================
 
   return (
-    <div
-  data-editing-ribbon
-
-  className="
-    relative
-
-    flex
-    items-center
-    gap-2
-
-    border-b
-    border-white/10
-
-    bg-[#0b100f]/95
-
-    px-4
-    py-2
-
-    backdrop-blur-xl
-
-    shadow-[0_8px_25px_rgba(0,0,0,0.25)]
-  "
->
-
-      {/* TITLE */}
-
+    <>
       <div
+        data-editing-ribbon
+
         className="
-          mr-2
+          relative
+          z-[800]
 
           flex
-          shrink-0
+          w-full
+
           items-center
           gap-2
 
-          border-r
+          overflow-visible
+
+          border-b
           border-white/10
 
-          pr-4
+          bg-[#0b100f]/95
+
+          px-4
+          py-2
+
+          backdrop-blur-xl
+
+          shadow-[0_8px_25px_rgba(0,0,0,0.25)]
         "
       >
-        <SlidersHorizontal
-          size={17}
 
-          className="
-            text-[var(--accent)]
-          "
-        />
+        {/* =====================================
+            TITLE
+        ===================================== */}
 
-        <span
-          className="
-            text-xs
-            font-semibold
-            uppercase
-            tracking-[0.18em]
-
-            text-gray-500
-          "
-        >
-          Effects
-        </span>
-      </div>
-      <div
-  className="
-    flex
-    items-center
-    gap-1
-
-    border-r
-    border-white/10
-
-    pr-3
-  "
->
-  <button
-    type="button"
-
-    onClick={
-      onUndo
-    }
-
-    disabled={
-      !canUndo
-    }
-
-    title="Undo"
-
-    className="
-      flex
-      h-9
-      w-9
-
-      items-center
-      justify-center
-
-      rounded-lg
-
-      text-gray-400
-
-      transition
-
-      hover:bg-white/10
-      hover:text-white
-
-      disabled:cursor-not-allowed
-      disabled:opacity-25
-    "
-  >
-    <Undo2 size={17} />
-  </button>
-
-
-  <button
-    type="button"
-
-    onClick={
-      onRedo
-    }
-
-    disabled={
-      !canRedo
-    }
-
-    title="Redo"
-
-    className="
-      flex
-      h-9
-      w-9
-
-      items-center
-      justify-center
-
-      rounded-lg
-
-      text-gray-400
-
-      transition
-
-      hover:bg-white/10
-      hover:text-white
-
-      disabled:cursor-not-allowed
-      disabled:opacity-25
-    "
-  >
-    <Redo2 size={17} />
-  </button>
-</div>
-
-
-      {/* EFFECT BUTTONS */}
-
-      {/* ======================================
-    EFFECT BUTTONS
-====================================== */}
-
-<div
-  className="
-    flex
-    min-w-0
-    flex-1
-    items-center
-    gap-1
-
-    overflow-x-auto
-    hide-scrollbar
-  "
->
-  {effects.map((effect) => {
-    const Icon = effect.icon;
-
-    return (
-      <button
-        key={effect.id}
-
-        type="button"
-
-        disabled={!selectedClip}
-
-        onClick={() =>
-          handleEffectClick(
-            effect
-          )
-        }
-
-        onContextMenu={(event) =>
-          handleContextMenu(
-            event,
-            effect
-          )
-        }
-
-        onMouseEnter={(event) => {
-          const button =
-            event.currentTarget;
-
-          const buttonRect =
-            button.getBoundingClientRect();
-
-          const ribbonRect =
-            button
-              .closest(
-                "[data-editing-ribbon]"
-              )
-              ?.getBoundingClientRect();
-
-          if (!ribbonRect) {
-            return;
-          }
-
-          setTooltip({
-            name:
-              effect.name,
-
-            hasControl:
-              effect.hasControl,
-
-            left:
-              buttonRect.left -
-              ribbonRect.left +
-              buttonRect.width / 2,
-          });
-        }}
-
-        onMouseLeave={() => {
-          setTooltip(null);
-        }}
-
-        className="
-          flex
-          h-10
-          w-10
-          shrink-0
-
-          cursor-pointer
-
-          items-center
-          justify-center
-
-          rounded-lg
-
-          text-gray-400
-
-          transition-all
-          duration-200
-
-          hover:bg-[var(--accent-soft)]
-          hover:text-[var(--accent)]
-
-          active:scale-95
-
-          disabled:cursor-not-allowed
-          disabled:opacity-25
-        "
-      >
-        <Icon size={18} />
-      </button>
-    );
-  })}
-</div>
-{/* ======================================
-    EFFECT TOOLTIP
-====================================== */}
-
-{tooltip && (
-  <div
-    className="
-      pointer-events-none
-
-      absolute
-      top-[54px]
-
-      z-[1000]
-
-      -translate-x-1/2
-
-      whitespace-nowrap
-
-      rounded-md
-
-      border
-      border-white/10
-
-      bg-[#151918]
-
-      px-2.5
-      py-1.5
-
-      text-[11px]
-      text-white
-
-      shadow-xl
-    "
-
-    style={{
-      left:
-        `${tooltip.left}px`,
-    }}
-  >
-    {tooltip.name}
-
-    {tooltip.hasControl && (
-      <span
-        className="
-          ml-1
-          text-gray-500
-        "
-      >
-        • Right-click
-      </span>
-    )}
-  </div>
-)}
-
-
-      {/* ======================================
-          EFFECT CONTROL POPOVER
-      ====================================== */}
-
-      {activeControl && (
         <div
-          ref={
-            popoverRef
-          }
-
           className="
-            absolute
+            mr-2
 
-            left-24
-            top-[58px]
+            flex
+            shrink-0
 
-            z-[500]
+            items-center
+            gap-2
 
-            w-72
-
-            rounded-xl
-
-            border
+            border-r
             border-white/10
 
-            bg-[#121716]
-
-            p-4
-
-            shadow-[0_20px_50px_rgba(0,0,0,0.55)]
+            pr-4
           "
         >
+          <SlidersHorizontal
+            size={17}
 
-          <div
             className="
-              mb-4
+              text-[var(--accent)]
+            "
+          />
 
-              flex
-              items-center
-              justify-between
+
+          <span
+            className="
+              text-xs
+              font-semibold
+
+              uppercase
+              tracking-[0.18em]
+
+              text-gray-500
             "
           >
-            <h3
-              className="
-                text-sm
-                font-semibold
-                text-white
-              "
-            >
-              {
-                effects.find(
-                  (effect) =>
-                    effect.id ===
-                    activeControl
-                )?.name
-              }
-            </h3>
-
-            <span
-              className="
-                text-[10px]
-                uppercase
-                tracking-wider
-                text-gray-600
-              "
-            >
-              Clip Effect
-            </span>
-          </div>
+            Effects
+          </span>
+        </div>
 
 
-          {renderControlContent()}
+        {/* =====================================
+            UNDO / REDO
+        ===================================== */}
+
+        <div
+          className="
+            flex
+            shrink-0
+
+            items-center
+            gap-1
+
+            border-r
+            border-white/10
+
+            pr-3
+          "
+        >
+          <button
+            type="button"
+
+            onClick={
+              onUndo
+            }
+
+            disabled={
+              !canUndo
+            }
+
+            title="Undo"
+
+            className="
+              flex
+              h-9
+              w-9
+
+              items-center
+              justify-center
+
+              rounded-lg
+
+              text-gray-400
+
+              transition
+
+              hover:bg-white/10
+              hover:text-white
+
+              disabled:cursor-not-allowed
+              disabled:opacity-25
+            "
+          >
+            <Undo2
+              size={17}
+            />
+          </button>
 
 
           <button
             type="button"
 
-            onClick={() =>
-              applyEffect(
-                activeControl
-              )
+            onClick={
+              onRedo
             }
 
+            disabled={
+              !canRedo
+            }
+
+            title="Redo"
+
             className="
-              mt-2
+              flex
+              h-9
+              w-9
 
-              w-full
-
-              cursor-pointer
+              items-center
+              justify-center
 
               rounded-lg
 
-              bg-[var(--accent)]
-
-              px-4
-              py-2
-
-              text-sm
-              font-semibold
-              text-black
+              text-gray-400
 
               transition
 
-              hover:bg-[var(--accent-hover)]
+              hover:bg-white/10
+              hover:text-white
+
+              disabled:cursor-not-allowed
+              disabled:opacity-25
             "
           >
-            Apply
+            <Redo2
+              size={17}
+            />
           </button>
-
         </div>
-      )}
 
-    </div>
+
+        {/* =====================================
+            RECORD VOICE
+        ===================================== */}
+
+        <div
+          className="
+            flex
+            shrink-0
+
+            items-center
+
+            border-r
+            border-white/10
+
+            pr-3
+          "
+        >
+          <button
+            type="button"
+
+            onClick={() => {
+              setTooltip(
+                null
+              );
+
+              setActiveControl(
+                null
+              );
+
+              setShowRecorder(
+                true
+              );
+            }}
+
+            title="Record Voice"
+
+            className="
+              flex
+              h-10
+              w-10
+
+              cursor-pointer
+
+              items-center
+              justify-center
+
+              rounded-lg
+
+              text-gray-400
+
+              transition-all
+              duration-200
+
+              hover:bg-[var(--accent-soft)]
+              hover:text-[var(--accent)]
+
+              active:scale-95
+            "
+          >
+            <Mic
+              size={19}
+            />
+          </button>
+        </div>
+
+
+        {/* =====================================
+            SCROLLABLE EFFECT ICONS
+        ===================================== */}
+
+        <div
+          className="
+            flex
+            min-w-0
+            flex-1
+
+            items-center
+            gap-1
+
+            overflow-x-auto
+            overflow-y-hidden
+
+            hide-scrollbar
+          "
+        >
+          {effects.map(
+            (effect) => {
+
+              const Icon =
+                effect.icon;
+
+
+              return (
+                <button
+                  key={
+                    effect.id
+                  }
+
+                  type="button"
+
+                  disabled={
+                    !selectedClip
+                  }
+
+                  onClick={() =>
+                    handleEffectClick(
+                      effect
+                    )
+                  }
+
+                  onContextMenu={(
+                    event
+                  ) =>
+                    handleContextMenu(
+                      event,
+                      effect
+                    )
+                  }
+
+                  onMouseEnter={(
+                    event
+                  ) => {
+
+                    const button =
+                      event.currentTarget;
+
+
+                    const buttonRect =
+                      button
+                        .getBoundingClientRect();
+
+
+                    const ribbon =
+                      button.closest(
+                        "[data-editing-ribbon]"
+                      );
+
+
+                    const ribbonRect =
+                      ribbon
+                        ?.getBoundingClientRect();
+
+
+                    if (
+                      !ribbonRect
+                    ) {
+                      return;
+                    }
+
+
+                    setTooltip({
+                      name:
+                        effect.name,
+
+                      hasControl:
+                        effect.hasControl,
+
+                      left:
+                        buttonRect.left -
+                        ribbonRect.left +
+                        buttonRect.width /
+                          2,
+                    });
+                  }}
+
+                  onMouseLeave={() => {
+                    setTooltip(
+                      null
+                    );
+                  }}
+
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+
+                    cursor-pointer
+
+                    items-center
+                    justify-center
+
+                    rounded-lg
+
+                    text-gray-400
+
+                    transition-all
+                    duration-200
+
+                    hover:bg-[var(--accent-soft)]
+                    hover:text-[var(--accent)]
+
+                    active:scale-95
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-25
+                  "
+                >
+                  <Icon
+                    size={18}
+                  />
+                </button>
+              );
+            }
+          )}
+        </div>
+
+
+        {/* =====================================
+            EFFECT TOOLTIP
+        ===================================== */}
+
+        {tooltip && (
+          <div
+            className="
+              pointer-events-none
+
+              absolute
+              top-[54px]
+
+              z-[1100]
+
+              -translate-x-1/2
+
+              whitespace-nowrap
+
+              rounded-md
+
+              border
+              border-white/10
+
+              bg-[#151918]
+
+              px-2.5
+              py-1.5
+
+              text-[11px]
+              text-white
+
+              shadow-xl
+            "
+
+            style={{
+              left:
+                `${tooltip.left}px`,
+            }}
+          >
+            {tooltip.name}
+
+
+            {tooltip.hasControl && (
+              <span
+                className="
+                  ml-1
+                  text-gray-500
+                "
+              >
+                • Right-click
+              </span>
+            )}
+          </div>
+        )}
+
+
+        {/* =====================================
+            EFFECT CONTROL POPOVER
+        ===================================== */}
+
+        {activeControl && (
+          <div
+            ref={
+              popoverRef
+            }
+
+            onPointerDown={(
+              event
+            ) => {
+              event.stopPropagation();
+            }}
+
+            className="
+              absolute
+
+              left-12
+              top-[58px]
+
+              z-[1200]
+
+              w-80
+
+              overflow-visible
+
+              rounded-xl
+
+              border
+              border-white/10
+
+              bg-[#121716]
+
+              p-5
+
+              shadow-[0_24px_70px_rgba(0,0,0,0.75)]
+            "
+          >
+
+            <div
+              className="
+                mb-5
+
+                flex
+                items-center
+                justify-between
+              "
+            >
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-white
+                "
+              >
+                {
+                  effects.find(
+                    (effect) =>
+                      effect.id ===
+                      activeControl
+                  )?.name
+                }
+              </h3>
+
+
+              <span
+                className="
+                  text-[10px]
+
+                  uppercase
+                  tracking-wider
+
+                  text-gray-600
+                "
+              >
+                Clip Effect
+              </span>
+            </div>
+
+
+            {
+              renderControlContent()
+            }
+
+
+            <button
+              type="button"
+
+              onClick={() =>
+                applyEffect(
+                  activeControl
+                )
+              }
+
+              className="
+                mt-2
+
+                w-full
+
+                cursor-pointer
+
+                rounded-xl
+
+                bg-[var(--accent)]
+
+                px-4
+                py-2.5
+
+                text-sm
+                font-semibold
+                text-black
+
+                transition
+
+                hover:bg-[var(--accent-hover)]
+
+                active:scale-[0.99]
+              "
+            >
+              Apply
+            </button>
+
+          </div>
+        )}
+
+      </div>
+
+
+      {/* =====================================
+          VOICE RECORDER MODAL
+      ===================================== */}
+
+      {showRecorder && (
+        <VoiceRecorderModal
+          onClose={() =>
+            setShowRecorder(
+              false
+            )
+          }
+        />
+      )}
+    </>
   );
 };
 
