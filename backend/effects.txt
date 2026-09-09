@@ -1,0 +1,17 @@
+bass_boost
+denoise
+distortion
+echo
+equalizer
+fade
+gain
+highpass
+lowpass
+normalize
+pitch
+reverb
+reverse
+slow
+treble_boost
+merge
+time shift
