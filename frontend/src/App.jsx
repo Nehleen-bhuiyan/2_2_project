@@ -30,6 +30,7 @@ const App = () => {
             element={<ProjectEditor />}
           />
           <Route path="/signal-lab" element={<SignalLab />} />
+          <Route path="/signal-lab/:effectId" element={<SignalLab />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/spill-your-guts" element={<SpillYourGuts />} />
           <Route path="/voice-changer"
