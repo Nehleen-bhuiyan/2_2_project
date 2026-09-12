@@ -85,7 +85,7 @@ const EFFECTS = [
         description:
             "Thin compressed broadcast-style voice.",
         icon: Radio,
-        disabled: true,
+
     },
     {
         id: "telephone",
@@ -93,7 +93,7 @@ const EFFECTS = [
         description:
             "Narrow-band old telephone sound.",
         icon: Phone,
-        disabled: true,
+
     },
     {
         id: "chipmunk",
@@ -101,7 +101,7 @@ const EFFECTS = [
         description:
             "Higher-pitched voice while preserving speech speed.",
         icon: Sparkles,
-        disabled: true,
+
     },
     {
         id: "deep",
@@ -109,7 +109,7 @@ const EFFECTS = [
         description:
             "Lower-pitched, heavier vocal tone.",
         icon: Volume2,
-        disabled: true,
+
     },
 ];
 
@@ -223,6 +223,22 @@ const VoiceChanger = () => {
         distortionDrive,
         setDistortionDrive,
     ] = useState(4);
+    const [
+        chipmunkRatio,
+        setChipmunkRatio,
+    ] = useState(1.55);
+
+
+    const [
+        deepRatio,
+        setDeepRatio,
+    ] = useState(0.72);
+
+
+    const [
+        radioDrive,
+        setRadioDrive,
+    ] = useState(3.5);
 
 
     const [
@@ -807,6 +823,22 @@ const VoiceChanger = () => {
                     "distortion",
                     distortionDrive
                 );
+                engine.setParameter(
+                    "chipmunkRatio",
+                    chipmunkRatio
+                );
+
+
+                engine.setParameter(
+                    "deepRatio",
+                    deepRatio
+                );
+
+
+                engine.setParameter(
+                    "radioDrive",
+                    radioDrive
+                );
 
 
                 engineRef.current =
@@ -823,7 +855,7 @@ const VoiceChanger = () => {
                 );
 
             } catch (
-                caughtError
+            caughtError
             ) {
 
                 console.error(
@@ -1025,6 +1057,55 @@ const VoiceChanger = () => {
 
 
             engineRef.current?.setVolume(
+                value
+            );
+        };
+    const updateChipmunkRatio =
+        (
+            value
+        ) => {
+
+            setChipmunkRatio(
+                value
+            );
+
+
+            engineRef.current?.setParameter(
+                "chipmunkRatio",
+                value
+            );
+        };
+
+
+    const updateDeepRatio =
+        (
+            value
+        ) => {
+
+            setDeepRatio(
+                value
+            );
+
+
+            engineRef.current?.setParameter(
+                "deepRatio",
+                value
+            );
+        };
+
+
+    const updateRadioDrive =
+        (
+            value
+        ) => {
+
+            setRadioDrive(
+                value
+            );
+
+
+            engineRef.current?.setParameter(
+                "radioDrive",
                 value
             );
         };
@@ -1534,10 +1615,9 @@ const VoiceChanger = () => {
                                             justify-center
                                             rounded-2xl
                                             border
-                                            ${
-                                                isLive
-                                                    ? "border-teal-400/30 bg-teal-400/10 text-teal-300"
-                                                    : "border-white/10 bg-white/[0.04] text-white/65"
+                                            ${isLive
+                                                ? "border-teal-400/30 bg-teal-400/10 text-teal-300"
+                                                : "border-white/10 bg-white/[0.04] text-white/65"
                                             }
                                         `}
                                     >
@@ -1874,15 +1954,13 @@ const VoiceChanger = () => {
                                                 p-5
                                                 text-left
                                                 transition
-                                                ${
-                                                    selected
-                                                        ? "border-teal-400/40 bg-teal-400/[0.09] shadow-lg shadow-teal-950/30"
-                                                        : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
+                                                ${selected
+                                                    ? "border-teal-400/40 bg-teal-400/[0.09] shadow-lg shadow-teal-950/30"
+                                                    : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.05]"
                                                 }
-                                                ${
-                                                    effect.disabled
-                                                        ? "cursor-not-allowed opacity-45"
-                                                        : ""
+                                                ${effect.disabled
+                                                    ? "cursor-not-allowed opacity-45"
+                                                    : ""
                                                 }
                                             `}
                                         >
@@ -1914,10 +1992,9 @@ const VoiceChanger = () => {
                                                         justify-center
                                                         rounded-2xl
                                                         border
-                                                        ${
-                                                            selected
-                                                                ? "border-teal-400/30 bg-teal-400/10 text-teal-300"
-                                                                : "border-white/10 bg-white/[0.04] text-white/65"
+                                                        ${selected
+                                                            ? "border-teal-400/30 bg-teal-400/10 text-teal-300"
+                                                            : "border-white/10 bg-white/[0.04] text-white/65"
                                                         }
                                                     `}
                                                 >
@@ -2066,7 +2143,7 @@ const VoiceChanger = () => {
                                 step={0.01}
                                 display={`${Math.round(
                                     outputVolume *
-                                        100
+                                    100
                                 )}%`}
                                 onChange={
                                     updateOutputVolume
@@ -2076,7 +2153,7 @@ const VoiceChanger = () => {
 
                             {
                                 activeEffect ===
-                                    "robot" && (
+                                "robot" && (
                                     <SliderControl
                                         label="Robot Frequency"
                                         value={
@@ -2096,7 +2173,7 @@ const VoiceChanger = () => {
 
                             {
                                 activeEffect ===
-                                    "alien" && (
+                                "alien" && (
                                     <SliderControl
                                         label="Alien Modulation"
                                         value={
@@ -2116,7 +2193,7 @@ const VoiceChanger = () => {
 
                             {
                                 activeEffect ===
-                                    "tremolo" && (
+                                "tremolo" && (
                                     <>
                                         <SliderControl
                                             label="Tremolo Speed"
@@ -2144,7 +2221,7 @@ const VoiceChanger = () => {
                                             step={0.01}
                                             display={`${Math.round(
                                                 tremoloDepth *
-                                                    100
+                                                100
                                             )}%`}
                                             onChange={
                                                 updateTremoloDepth
@@ -2153,11 +2230,98 @@ const VoiceChanger = () => {
                                     </>
                                 )
                             }
+                            {
+    activeEffect ===
+        "radio" && (
+        <SliderControl
+            label="Radio Saturation"
+            value={
+                radioDrive
+            }
+            min={1}
+            max={8}
+            step={0.1}
+            display={
+                radioDrive.toFixed(
+                    1
+                )
+            }
+            onChange={
+                updateRadioDrive
+            }
+        />
+    )
+}
+{
+    activeEffect ===
+        "telephone" && (
+        <div
+            className="
+                rounded-2xl
+
+                border
+                border-white/10
+
+                bg-black/20
+
+                px-4
+                py-4
+
+                text-sm
+                leading-6
+
+                text-white/45
+            "
+        >
+            
+        </div>
+    )
+}
+{
+    activeEffect ===
+        "chipmunk" && (
+        <SliderControl
+            label="Pitch"
+            value={
+                chipmunkRatio
+            }
+            min={1.1}
+            max={1.9}
+            step={0.01}
+            display={`${chipmunkRatio.toFixed(
+                2
+            )}×`}
+            onChange={
+                updateChipmunkRatio
+            }
+        />
+    )
+}
+{
+    activeEffect ===
+        "deep" && (
+        <SliderControl
+            label="Pitch"
+            value={
+                deepRatio
+            }
+            min={0.55}
+            max={0.95}
+            step={0.01}
+            display={`${deepRatio.toFixed(
+                2
+            )}×`}
+            onChange={
+                updateDeepRatio
+            }
+        />
+    )
+}
 
 
                             {
                                 activeEffect ===
-                                    "distortion" && (
+                                "distortion" && (
                                     <SliderControl
                                         label="Drive"
                                         value={
