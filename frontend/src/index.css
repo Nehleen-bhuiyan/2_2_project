@@ -28,3 +28,53 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
 }
+
+/* =========================================================
+   SCROLL REVEAL
+   Used by the Home page's <Reveal> wrapper. Sections start
+   blurred / offset / transparent, then "morph" into place
+   as they enter the viewport.
+========================================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(36px) scale(0.97);
+  filter: blur(6px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform, filter;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
+
+/* =========================================================
+   HERO WAVEFORM BARS
+========================================================= */
+@keyframes wave-pulse {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.wave-bar {
+  transform-origin: bottom;
+  animation: wave-pulse 1.6s ease-in-out infinite;
+}
