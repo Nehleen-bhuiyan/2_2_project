@@ -60,6 +60,85 @@ const Reveal = ({ children, delay = 0, className = "" }) => {
 };
 
 // =========================================================
+// FLOWING WAVE — a continuous, glowing signal line rendered on
+// canvas, the same idea as the idle waveform on the Voice
+// Changer page, instead of a row of discrete static bars.
+// =========================================================
+
+const FlowingWave = ({ className = "" }) => {
+  const canvasRef = useRef(null);
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    const context = canvas.getContext("2d");
+    if (!context) return undefined;
+
+    let width = 0;
+    let height = 0;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.scale(ratio, ratio);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    const draw = () => {
+      context.clearRect(0, 0, width, height);
+
+      const time = performance.now() * 0.001;
+
+      const gradient = context.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, "rgba(25, 211, 197, 0.05)");
+      gradient.addColorStop(0.5, "rgba(103, 232, 249, 0.95)");
+      gradient.addColorStop(1, "rgba(25, 211, 197, 0.05)");
+
+      context.beginPath();
+      for (let x = 0; x < width; x++) {
+        const normalized = x / width;
+        const envelope = Math.sin(Math.PI * normalized);
+        const y =
+          height / 2 +
+          Math.sin(normalized * Math.PI * 7 + time * 1.8) *
+            (height * 0.34) *
+            envelope;
+
+        if (x === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      }
+
+      context.strokeStyle = gradient;
+      context.lineWidth = 2;
+      context.shadowBlur = 16;
+      context.shadowColor = "rgba(25, 211, 197, 0.55)";
+      context.stroke();
+      context.shadowBlur = 0;
+
+      frameRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className={className} />;
+};
+
+// =========================================================
 // STATIC CONTENT
 // =========================================================
 
@@ -69,7 +148,7 @@ const FEATURES = [
     tag: "EDIT",
     title: "Editing Studio",
     description:
-      "A full multitrack workspace — import, arrange and trim clips across tracks, then render a mixed, processed export.",
+      "A full multitrack workspace: import, arrange and trim clips across tracks, then render a mixed, processed export.",
     points: [
       "Multitrack timeline & clip editing",
       "15 built-in clip effects",
@@ -82,7 +161,7 @@ const FEATURES = [
     tag: "ANALYZE",
     title: "Signal Lab",
     description:
-      "See sound instead of just hearing it — waveforms, FFT spectra and a visualization tailored to every effect's DSP.",
+      "See sound instead of just hearing it: waveforms, FFT spectra and a visualization tailored to every effect's DSP.",
     points: [
       "Before / after waveform & FFT spectrum",
       "Per-effect DSP visualizations",
@@ -108,7 +187,7 @@ const FEATURES = [
     tag: "TRANSFORM LIVE",
     title: "Voice Changer",
     description:
-      "Reshape your voice in real time with low-latency AudioWorklet processing — robot, alien, radio and more.",
+      "Reshape your voice in real time with low-latency AudioWorklet processing robot, alien, radio and more.",
     points: [
       "10 live voice presets",
       "Real-time pitch shifting & modulation",
@@ -174,17 +253,6 @@ const Home = () => {
   const { user } = useAuth();
   const year = useMemo(() => new Date().getFullYear(), []);
 
-  // Deterministic-looking but organic waveform bar heights for the
-  // hero decoration — seeded so it doesn't reshuffle on re-render.
-  const bars = useMemo(
-    () =>
-      Array.from({ length: 48 }, (_, i) => ({
-        h: 18 + Math.round(Math.abs(Math.sin(i * 0.7)) * 46),
-        d: (i % 12) * 0.09,
-      })),
-    []
-  );
-
   return (
     <div className="overflow-hidden">
       {/* =====================================================
@@ -209,11 +277,11 @@ const Home = () => {
           <h1 className="mt-7 max-w-2xl text-3xl font-bold leading-[1.15] sm:text-5xl">
             One studio for{" "}
             <span className="text-[var(--accent)]">every</span> way you
-            touch sound.
+            transform sound
           </h1>
 
           <p className="mt-4 max-w-md text-[15px] leading-relaxed text-[var(--text-muted)] sm:text-lg">
-            Edit it, see it, hide it, transform it — live.
+            Edit it, see it, hide it, transform it live
           </p>
 
           <div className="mt-9 flex w-full flex-col items-center gap-4 sm:w-auto sm:flex-row">
@@ -233,19 +301,8 @@ const Home = () => {
             </a>
           </div>
 
-          {/* animated waveform decoration */}
-          <div className="mt-16 flex h-16 items-end gap-[3px] opacity-80">
-            {bars.map((bar, i) => (
-              <span
-                key={i}
-                className="wave-bar w-[3px] rounded-full bg-[var(--accent)]"
-                style={{
-                  height: `${bar.h}%`,
-                  animationDelay: `${bar.d}s`,
-                }}
-              />
-            ))}
-          </div>
+          {/* animated flowing signal */}
+          <FlowingWave className="mt-16 h-16 w-full max-w-md opacity-90" />
         </div>
       </section>
 
@@ -280,7 +337,7 @@ const Home = () => {
               <span className="text-[var(--accent)]">Audiverse</span>.
             </h2>
             <p className="mt-4 text-sm text-[var(--text-muted)] sm:text-base">
-              Every page is a different lens on the same signal — build it,
+              Every page is a different lens on the same signal - build it,
               understand it, conceal it, or bend it live.
             </p>
           </Reveal>
@@ -344,7 +401,7 @@ const Home = () => {
               15 studio-grade effects, ready to shape your sound
             </h2>
             <p className="mt-3 text-sm text-[var(--text-muted)] sm:text-base">
-              Every effect below is available in the Editing Studio — and
+              Every effect below is available in the Editing Studio and
               explained visually in Signal Lab.
             </p>
           </Reveal>
@@ -375,7 +432,7 @@ const Home = () => {
               How Audiverse flows
             </h2>
             <p className="mt-4 text-sm text-[var(--text-muted)] sm:text-base">
-              You don't have to use every page — but together, they cover
+              You don't have to use every page but together, they cover
               the full life of a sound.
             </p>
           </Reveal>
@@ -449,7 +506,7 @@ const Home = () => {
             <img src={logo} alt="Audiverse" className="h-7 w-auto" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-gray-400">
               A multitrack audio studio, DSP visualizer, audio
-              steganography tool and live voice changer — built as one
+              steganography tool and live voice changer built as one
               connected signal-processing playground.
             </p>
             <div className="mt-5 flex items-center gap-3">
@@ -461,7 +518,9 @@ const Home = () => {
                 <Code2 size={16} />
               </a>
               <a
-                href="mailto:hello@audiverse.app"
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=sujana.ramisa111@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Email"
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300 transition-colors hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
               >
@@ -503,11 +562,11 @@ const Home = () => {
             <ul className="mt-4 space-y-3 text-sm text-gray-400">
               <li>
                 Built as a project exploring audio DSP, signal
-                visualization and steganography end-to-end.
+                visualization and steganography end-to-end under CSE220 - Signal Course.
               </li>
               <li className="pt-1 text-gray-500">
                 Developers:{" "}
-                <span className="text-gray-300"> Nusaiba Nehleen Bhuiyan</span> &amp;{" "}
+                <span className="text-gray-300">Nusaiba Nehleen Bhuiyan</span> &amp;{" "}
                 <span className="text-gray-300">Ramisa Musarrat Sujana</span>
               </li>
             </ul>
@@ -518,15 +577,16 @@ const Home = () => {
             <h4 className="text-sm font-semibold text-white">Contact</h4>
             <ul className="mt-4 space-y-3 text-sm text-gray-400">
               <li>
-                <a
-                  href="mailto:hello@audiverse.app"
-                  className="transition-colors hover:text-[var(--accent)]"
-                >
-                  hello@audiverse.app
-                </a>
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=sujana.ramisa111@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                contact@audiverse.app
+              </a>
               </li>
               <li>
-                <a href="#" className="transition-colors hover:text-[var(--accent)]">
+                <a href="https://github.com/Nehleen-bhuiyan/2_2_project.git" className="transition-colors hover:text-[var(--accent)]">
                   GitHub Repository
                 </a>
               </li>

@@ -59,22 +59,3 @@ body {
     transition: none;
   }
 }
-
-/* =========================================================
-   HERO WAVEFORM BARS
-========================================================= */
-@keyframes wave-pulse {
-  0%,
-  100% {
-    transform: scaleY(0.35);
-    opacity: 0.55;
-  }
-  50% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
-.wave-bar {
-  transform-origin: bottom;
-  animation: wave-pulse 1.6s ease-in-out infinite;
-}
